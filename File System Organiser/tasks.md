@@ -1,6 +1,6 @@
 To-do List->
 [*] - Help
-[] - Organize
+[*] - Organize
 [] - Tree
 [] - Global
 [] - Cover some good practice

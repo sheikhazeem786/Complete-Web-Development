@@ -1,21 +1,21 @@
 let inputArr = process.argv.slice(2);
-const { dir } = require("console");
 let fs = require("fs");
 let path = require("path");
 // console.log(inputArr);
 let command = inputArr[0];
-utility.types = {
+let types = {
     media: ["mp4", "mkv"],
     archives: ['zip', '7z', 'rar', 'tar', 'gz', 'ar', 'iso', 'xz'],
     documents: ['docx', 'dox', 'pdf', 'xlsx', 'xls', 'odt', 'ods', 'odp', 'odg', 'odf', 'txt', 'ps', 'tex'],
     app: ['exe', 'dmg', 'pkg', 'deb']
 }
+
 switch (command) {
     case "tree":
-        treefn();
+        treefn(inputArr[1]);
         break;
     case "organize":
-        organizefn();
+        organizefn(inputArr[1]);
         break;
     case "help":
         helpfn();
@@ -30,9 +30,11 @@ function treefn(dirPath) {
 
 }
 
+
 function organizefn(dirPath) {
-    console.log("The command implemented for ", dirPath);
+    // console.log("The command implemented for ", dirPath);
     // 1. input -> directory path given
+    let destPath;
     if (dirPath == undefined) {
         console.log("Kindly enter the path");
         return;
@@ -40,7 +42,7 @@ function organizefn(dirPath) {
         let doesExist = fs.existsSync(dirPath);
         if (doesExist) {
             // 2. create -> organied files -> directory
-            let destPath = path.join(dirPath, "organized_files")
+            destPath = path.join(dirPath, "organized_files")
             if (fs.existsSync(destPath) == false) {
                 fs.mkdirSync(destPath);
             }
@@ -59,18 +61,42 @@ function organizeHelper(src, dest) {
     // console.log(childNames);
     for (let i = 0; i < childNames.length; i++) {
         let childAddress = path.join(src, childNames[i]);
+        // now get data of all files except directories
         let isFile = fs.lstatSync(childAddress).isFile();
         if (isFile) {
-            console.log(childNames[i]);
             let category = getCategory(childNames[i]);
+            // console.log(childNames[i], " belongs to --> ", category);
             // 4. copy/cut files to that organized directory
+            sendFiles(childAddress, dest, category);
         }
     }
 }
 
+function sendFiles(srcFilePath, dest, category) {
+    let categoryPath = path.join(dest, category);
+    if (fs.existsSync(categoryPath) == false) {
+        fs.mkdirSync(categoryPath);
+    }
+    let fileName = path.basename(srcFilePath);
+    let destFilePath = path.join(categoryPath, fileName);
+    fs.copyFileSync(srcFilePath, destFilePath);
+    fs.unlinkSync(srcFilePath);
+    console.log(fileName, " copied to ", category);
+}
+
 function getCategory(name) {
     let ext = path.extname(name);
-    console.log(ext);
+    // console.log(ext);
+    ext = ext.slice(1);
+    for (let type in types) {
+        let cTtypeArray = types[type];
+        for (let i = 0; i < cTtypeArray.length; i++) {
+            if (ext == cTtypeArray[i]) {
+                return type;
+            }
+        }
+    }
+    return "others";
 }
 
 
